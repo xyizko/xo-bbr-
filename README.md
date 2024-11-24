@@ -62,7 +62,7 @@ chmod +x dc.sh
 ./dc.sh
 ```
 > [!IMPORTANT]
-> This will stio and </p>prune ALL docker artifacts. Do not use if you have other docker containers running
+> This will stop and prune ALL docker artifacts. Do not use if you have other docker containers running
 
 
 # ⚠️ WARNING 
