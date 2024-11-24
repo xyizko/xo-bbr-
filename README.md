@@ -37,7 +37,7 @@ Famiiliary with the following tools is compulsory to make any tweaks and customi
 4. [`waybackurls`](https://github.com/tomnomnom/waybackurls) - URL enumeration from [`waybackmachine`](https://web.archive.org/)
 5. [`httpx`](https://github.com/projectdiscovery/httpx) - HTTP Toolkit
 6. [`nuclei`](https://github.com/projectdiscovery/nuclei) _ High Performance Vulnerability Scanner
-7. [`gowitness`](`https://github.com/sensepost/gowitness`) - Chrome Headless Screenshots
+7. [`gowitness`](https://github.com/sensepost/gowitness) - Chrome Headless Screenshots
 
 # 🦧 Usage
 
