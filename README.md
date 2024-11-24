@@ -55,6 +55,16 @@ chmod +x runbb.sh
 > [!IMPORTANT]
 > This is a comprehensive script which takes a long time to finish based on the complexity of the site. Even though it is written in golang.
 
+4. After completing usage you can prune all docker artifacts
+
+```sh 
+chmod +x dc.sh
+./dc.sh
+```
+> [!IMPORTANT]
+> This will stio and </p>prune ALL docker artifacts. Do not use if you have other docker containers running
+
+
 # ⚠️ WARNING 
 
 ![](./gfx/w.webp)
