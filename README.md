@@ -28,15 +28,14 @@ Recon bug bounty automation script in Docker
 > [!NOTE]
 > This dockerfile chains the following opens source utilities
 
-Famiiliary with the following tools is compulsory to make any tweaks and customization
+Famiiliary with the following tools is compulsory for tweaking and customizations
 
-1. [`Subfinder`](https://github.com/projectdiscovery/subfinder) - Fast passive sundomain enumeration 
-2. [`Amass`](https://github.com/projectdiscovery/subfinder) - Attack Surface Mapping
-3. [`Gau`](https://github.com/lc/gau) - URL Enumeration 
-4. [`waybackurls`](https://github.com/tomnomnom/waybackurls) - URL enumeration from [`waybackmachine`](https://web.archive.org/)
-5. [`httpx`](https://github.com/projectdiscovery/httpx) - HTTP Toolkit
-6. [`nuclei`](https://github.com/projectdiscovery/nuclei) _ High Performance Vulnerability Scanner
-7. [`gowitness`](https://github.com/sensepost/gowitness) - Chrome Headless Screenshots
+1. [`httpx`](https://github.com/projectdiscovery/httpx) - HTTP Toolkit
+2. [`nuclei`](https://github.com/projectdiscovery/nuclei) - High Performance Vulnerability Scanner
+3. [`subfinder`](https://github.com/projectdiscovery/subfinder) - Subdomain Enumeration
+4. [`naabu`](https://github.com/projectdiscovery/naabu) - Portscanner
+5. [`dnxs`](https://github.com/projectdiscovery/dnsx) - Multipurpose DNS Toolkit
+6. [`katana`](https://github.com/projectdiscovery/katana) - Crawling and Spidering
 
 # 🦧 Usage
 
@@ -52,9 +51,9 @@ chmod +x runbb.sh
 3. Results will be written to the `results` folder
 
 > [!IMPORTANT]
-> This is a comprehensive script which takes a long time to finish based on the complexity of the site. Even though it is written in golang.
+> This is a comprehensive script whose timing depends on the complexity of site. Please read the documentation for scoping and time-boxing.
 
-4. After completing usage you can prune all docker artifacts
+4. After completing usage you can prune all docker artifacts with `dc.sh`
 
 ```sh 
 chmod +x dc.sh
@@ -69,4 +68,4 @@ chmod +x dc.sh
 [![](./gfx/w.webp)](https://x.com/xyizko)
 
 > [!CAUTION]
-> For educational and competitions only. Usage on unauthorized site is illegal. 
+> For educational and competitions only. Usage on unauthorized sites is illegal. 

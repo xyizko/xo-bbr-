@@ -1,79 +1,54 @@
-# Use the official Golang image as the base image
-FROM golang:1.23.1-alpine as builder
+# Use official Golang image for building
+FROM golang:1.23.1-alpine AS builder
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Install necessary dependencies
-RUN apk add --no-cache git
+# Install dependencies
+RUN apk add --no-cache git gcc musl-dev libpcap-dev
 
-# Install subfinder
+# Install ProjectDiscovery tools and gowitness
 RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-
-# Install amass version 4.0.4
-RUN go install -v github.com/owasp-amass/amass/v4/...@master
-
-# Install gau
-RUN go install github.com/lc/gau/v2/cmd/gau@latest
-
-# Install waybackurls
-RUN go install github.com/tomnomnom/waybackurls@latest
-
-# Install httpx
 RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-
-# Install nuclei
 RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+RUN go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+RUN go install -v github.com/projectdiscovery/katana/cmd/katana@latest
 
-# Install gowitness
-RUN go install github.com/sensepost/gowitness@latest
-
-# Create a new stage from the base image
+# Create final runtime image
 FROM alpine:latest
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Create a non-root user
-RUN adduser -D -H -s /bin/sh appuser
+# Add a non-root user
+RUN adduser -D -H -s /bin/sh appuser \
+    && mkdir -p /app/results /home/appuser/.config \
+    && chown -R appuser:appuser /app /home/appuser/.config
 
-# Copy the installed binaries from the builder stage
-COPY --from=builder /go/bin/subfinder /usr/local/bin/subfinder
-COPY --from=builder /go/bin/amass /usr/local/bin/amass
-COPY --from=builder /go/bin/gau /usr/local/bin/gau
-COPY --from=builder /go/bin/waybackurls /usr/local/bin/waybackurls
-COPY --from=builder /go/bin/httpx /usr/local/bin/httpx
-COPY --from=builder /go/bin/nuclei /usr/local/bin/nuclei
-COPY --from=builder /go/bin/gowitness /usr/local/bin/gowitness
+# Install required runtime dependencies
+RUN apk add --no-cache libpcap
 
-# Create the directory for subfinder configuration
-RUN mkdir -p /home/appuser/.config/subfinder
+# Copy binaries from builder
+COPY --from=builder /go/bin/* /usr/local/bin/
 
-# Copy the default subfinder configuration file
-COPY subfinder_config.yaml /home/appuser/.config/subfinder/config.yaml
+# Copy configuration files from a correct directory in your build context
+COPY ./subfinder_config.yaml /home/appuser/.config/subfinder/subfinder_config.yaml
 
-# Create a directory for results
-RUN mkdir -p /app/results
+# Ensure nuclei templates are updated and appuser has permissions
+RUN mkdir -p /home/appuser/.config/nuclei && chown -R appuser:appuser /home/appuser/.config && nuclei -update-templates
 
-# Change ownership of the binaries, configuration file, and results directory to the non-root user
-RUN chown -R appuser:appuser /usr/local/bin /home/appuser/.config /app/results
-
-# Ensure the results directory has the correct permissions
-RUN chmod -R 777 /app/results
-
-# Switch to the non-root user
+# Switch to non-root user
 USER appuser
 
-# Set the entrypoint to execute the provided command
-ENTRYPOINT ["sh", "-c", "subfinder -d $TARGET -o /app/results/subfinder_results.txt && \
-amass enum -d $TARGET -o /app/results/amass_results.txt && \
-gau --subs --o /app/results/gau_results.txt $TARGET && \
-waybackurls $TARGET > /app/results/waybackurls_results.txt && \
-cat /app/results/subfinder_results.txt /app/results/amass_results.txt /app/results/gau_results.txt /app/results/waybackurls_results.txt | sort -u > /app/results/combined_results.txt && \
-httpx -l /app/results/combined_results.txt -o /app/results/httpx_output.txt && \
-nuclei -l /app/results/httpx_output.txt -o /app/results/nuclei_output.txt && \
-gowitness file -f /app/results/httpx_output.txt --screenshot-path=/app/results/screenshots"]
+# Expose volume for results
+VOLUME /app/results
 
-# Add a health check (optional, depending on your use case)
-HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl --fail http://localhost || exit 1
+# Entry point for recon
+ENTRYPOINT ["sh", "-c", "\
+    subfinder -d $TARGET -o /app/results/subdomains.txt; \
+    naabu -list /app/results/subdomains.txt -o /app/results/ports.txt; \
+    dnsx -l /app/results/subdomains.txt -o /app/results/resolved.txt; \
+    httpx -l /app/results/resolved.txt -o /app/results/httpx_output.txt; \
+    katana -list /app/results/resolved.txt -jc  -o /app/results/urls.txt; \
+    nuclei -l /app/results/httpx_output.txt -o /app/results/nuclei_output.txt;"]
